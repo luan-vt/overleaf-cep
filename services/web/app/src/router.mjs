@@ -587,8 +587,7 @@ async function initialize(webRouter, privateApiRouter, publicApiRouter) {
     CompileController.stopCompile
   )
 
-  // Added LuanVT: PreventCompileOnLoad
-
+  // TODO: Use CSLI Cache
   webRouter.get(
     '/project/:Project_id/output/cached/output.overleaf.json',
     AuthorizationMiddleware.ensureUserCanReadProject,

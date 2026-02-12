@@ -77,7 +77,6 @@ async function doCompile(request, stats, timings) {
 
   const e2eCompileStart = Date.now()
 
-  // Added LuanVT - PreventCompileOnLoad
   fsPromises.rm(Path.join(getOutputDir(projectId, userId), "output.overleaf.json"), { force: true })
 
   if (request.isInitialCompile) {
@@ -328,7 +327,8 @@ async function doCompile(request, stats, timings) {
     )
   }
 
-  // Added LuanVT - PreventCompileOnLoad
+  // Write output.overleaf.json 
+  // TODO: Use CLSI Cache instances
   let latestResultFile = Path.join(getOutputDir(projectId, userId), "output.overleaf.json")
     fsPromises.writeFile(latestResultFile, 
       JSON.stringify({

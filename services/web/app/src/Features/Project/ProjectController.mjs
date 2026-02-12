@@ -895,8 +895,6 @@ const _ProjectController = {
         bodyClasses: ['editor'],
         project_id: project._id,
         projectName: project.name,
-
-        // Update by LuanVT: PreventCompileOnLoad
         canUseClsiCache: true,
         user: {
           id: userId,
