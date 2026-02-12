@@ -77,6 +77,9 @@ async function doCompile(request, stats, timings) {
 
   const e2eCompileStart = Date.now()
 
+  // Added LuanVT - PreventCompileOnLoad
+  fsPromises.rm(Path.join(getOutputDir(projectId, userId), "output.overleaf.json"), { force: true })
+
   if (request.isInitialCompile) {
     stats.isInitialCompile = 1
     request.metricsOpts.compile = 'initial'
@@ -324,6 +327,44 @@ async function doCompile(request, stats, timings) {
       'sampled performance log'
     )
   }
+
+  // Added LuanVT - PreventCompileOnLoad
+  let latestResultFile = Path.join(getOutputDir(projectId, userId), "output.overleaf.json")
+    fsPromises.writeFile(latestResultFile, 
+      JSON.stringify({
+        fromCache: true,
+        status: 'success',
+        compileGroup: request.compileGroup,
+        options: {
+          compiler: request.compiler,
+          draft: request.draft,
+          imageName: request.imageName,
+          rootResourcePath: request.rootResourcePath,
+          stopOnFirstError: request.stopOnFirstError,
+        },
+        stats,
+        timings,
+        outputUrlPrefix: Settings.apis.clsi.outputUrlPrefix,
+        // Filter outputFiles extension {.log, .aux, .fdb_latexmk} as they are not needed for the user and can be large in size, causing performance issues when reading latest-build.json
+        outputFiles:
+          outputFiles
+          .filter(file => ['.log', '.blg', '.synctex.gz', '.pdf'].some(ext => file.path.endsWith(ext)))
+          .map(file => {
+            let url = `/project/${request.project_id}` +
+              (request.user_id != null
+                ? `/user/${request.user_id}`
+                : '') +
+              `/build/${file.build}/output/${file.path}`
+            let downloadURL = file.type == "pdf" ? `/download/project/${request.project_id}/build/${file.build}/output/${file.path}` : url;
+            return {url, downloadURL, ...file}
+          }),
+      })
+    ).catch(err => {
+      logger.warn(
+        { err, projectId, userId },
+        'error writing latest-build.json'
+      )
+    })
 
   return { outputFiles, buildId }
 }

@@ -1,3 +1,5 @@
+import fsPromises from 'node:fs/promises'
+
 import AdminController from './Features/ServerAdmin/AdminController.mjs'
 import ErrorController from './Features/Errors/ErrorController.mjs'
 import Features from './infrastructure/Features.mjs'
@@ -585,10 +587,24 @@ async function initialize(webRouter, privateApiRouter, publicApiRouter) {
     CompileController.stopCompile
   )
 
+  // Added LuanVT: PreventCompileOnLoad
+
   webRouter.get(
     '/project/:Project_id/output/cached/output.overleaf.json',
     AuthorizationMiddleware.ensureUserCanReadProject,
-    ClsiCacheController.getLatestBuildFromCache
+    async (req, res, next) => {
+      const projectId = req.params.Project_id
+      const userId = SessionManager.getLoggedInUserId(req.session)
+      const filePath = `/var/lib/overleaf/data/output/${projectId}-${userId}/output.overleaf.json`
+      
+      try {
+        await fsPromises.access(filePath, fsPromises.constants.R_OK)
+        const data = await fsPromises.readFile(filePath, 'utf8')
+        res.json(JSON.parse(data))
+      } catch (error) {
+        res.sendStatus(404)
+      }
+    }
   )
 
   webRouter.get(
