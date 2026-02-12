@@ -23,7 +23,7 @@ const SpamSafe = {
   },
 
   isSafeProjectName(name) {
-    if (SPAM_TAGS_REGEX.test(name) || countDigits(name) > 5) {
+    if (SPAM_TAGS_REGEX.test(name) || countDigits(name) > 20) {
       return false
     }
 
